@@ -1,6 +1,6 @@
 #!/bin/bash 
 # This script loops until a PID is alive
-# When the PID is no longer active send an email to notify it
+# When the PID is no longer active send a wall post to all tty and an email to notify about it
 
 ##########
 # CONFIG #
@@ -10,7 +10,8 @@
 # FUNCTIONS #
 #############
 
-function isCommandAvailable {
+function isCommandAvailable 
+{
     type -P $1 >/dev/null 2>&1 || { echo >&2 "Program '$1' is not installed. Please install it before executing this script"; exit 1; }
     return 0
 }
@@ -55,9 +56,10 @@ function sendNotificationWallPost()
 {
 	local pid=$1
 	local cmdline=$2
-	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) ended in '$HOSTNAME'.\n\nPlease check it." | wall -n
+	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) ended in '$HOSTNAME'.\n\nPlease check it." | wall -n &
 
 }
+
 ##########
 ## MAIN ##
 ##########
@@ -68,15 +70,18 @@ isCommandAvailable "wall"
 pid_to_wait=$1
 destination_email=$2
 cmd_to_wait="<UNKNOWN_CMD_LINE>"
+emailCorrect=1
 
 if [[ "$pid_to_wait" == "" ]];then
 	echo "Usage: $0 <PID_to_wait> [<email_to_send_notification>]"
 	exit 1
 fi
 
-# Check if $2 is a correct email address
-isCorrectEmailAddress $destination_email
-emailCorrect=$?
+# Check if $2 is a correct email address if it was provided
+if [[ $destination_email != "" ]];then
+    isCorrectEmailAddress $destination_email
+    emailCorrect=$?
+fi
 
 if [[ $emailCorrect == 1 ]];then
 	
