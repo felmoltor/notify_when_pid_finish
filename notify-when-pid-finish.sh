@@ -45,8 +45,9 @@ function sendNotificationEmail()
 {
 	local pid=$1
 	local cmdline=$2
-	local email=$3
-	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) ended in '$HOSTNAME'.\n\nPlease check it." | mutt -s "Proccess ID $pid ended" $email 
+	local pathtoexe=$3
+	local email=$4
+	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) ended in '$HOSTNAME' and path $pathtoexe.\nPlease check it." | mutt -s "Proccess ID $pid ended" $email 
 
 }
 
@@ -56,7 +57,8 @@ function sendNotificationWallPost()
 {
 	local pid=$1
 	local cmdline=$2
-	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) ended in '$HOSTNAME'.\n\nPlease check it." | wall -n &
+	local pathtoexe=$3
+	echo -e "This is an automatic notification to warn you the PID $pid ($cmdline) finished in '$HOSTNAME' and path $pathtoexe.\nPlease check it." | wall -n &
 
 }
 
@@ -90,16 +92,17 @@ if [[ $emailCorrect == 1 ]];then
 		exit 1
 	else
 		cmd_to_wait=$(cat /proc/$pid_to_wait/cmdline)
-		echo "Waiting for '$cmd_to_wait'"
+		path_to_exec=$(ls -l /proc/$pid_to_wait/exe | sed 's/.* -> //g')
+		echo "Waiting for '$cmd_to_wait' in path '$path_to_exec'"
 	fi
 	
 	echo "Let's wait for PID $pid_to_wait..."
 	waitForPid $pid_to_wait
 	if [[ "$destination_email" != "" ]];then
-        echo "$pid_to_wait ended. Sending an email to notify to $destination_email"
-        sendNotificationEmail $pid_to_wait $cmd_to_wait $destination_email
-    fi
-    sendNotificationWallPost $pid_to_wait $cmd_to_wait
+	        echo "$pid_to_wait ended. Sending an email to notify to $destination_email"
+        	sendNotificationEmail $pid_to_wait $cmd_to_wait $path_to_exec $destination_email
+	fi
+    	sendNotificationWallPost $pid_to_wait $cmd_to_wait $path_to_exec
 else
 	echo "Error. Provided email is not correct (for example: user@domain.com)"
 	exit 2
