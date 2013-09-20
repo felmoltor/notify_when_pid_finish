@@ -92,7 +92,7 @@ if [[ $emailCorrect == 1 ]];then
 		exit 1
 	else
 		cmd_to_wait=$(cat /proc/$pid_to_wait/cmdline)
-		path_to_exec=$(ls -l /proc/$pid_to_wait/exe | sed 's/.* -> //g')
+		path_to_exec=$(ls -l /proc/$pid_to_wait/cwd | sed 's/.* -> //g')
 		echo "Waiting for '$cmd_to_wait' in path '$path_to_exec'"
 	fi
 	
